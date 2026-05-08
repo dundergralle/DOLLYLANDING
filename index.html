@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffb8cc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Dolly</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { height: 100%; }
+
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    /* Warmer cream with subtle gradient for depth */
+    background:
+      radial-gradient(ellipse at 30% 20%, #ffb8cc 0%, #ff7e9e 50%, #c92e54 100%);
+  }
+
+  /* Drifting shine — bigger, brighter glows */
+  .shimmer {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 30%, rgba(255,255,255,0.7), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 75% 70%, rgba(255,220,230,0.75), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,200,215,0.55), transparent 70%);
+    background-size: 220% 220%;
+    animation: shine-drift 12s ease-in-out infinite;
+    mix-blend-mode: screen;
+  }
+
+  @keyframes shine-drift {
+    0%, 100% { background-position: 0% 0%, 100% 100%, 50% 50%; }
+    50%      { background-position: 100% 100%, 0% 0%, 30% 70%; }
+  }
+
+  /* Twinkling sparkles — bigger, brighter, more visible against cream bg */
+  .sparkles {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .sparkle {
+    position: absolute;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,230,240,0.95) 25%, rgba(255,180,200,0.5) 55%, transparent 75%);
+    border-radius: 50%;
+    animation: twinkle 2.4s ease-in-out infinite;
+    box-shadow:
+      0 0 8px rgba(255, 230, 240, 1),
+      0 0 16px rgba(255, 180, 200, 0.7);
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.3); }
+    50%      { opacity: 1; transform: scale(1.4); }
+  }
+
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.10) 0%,
+      rgba(255,255,255,0.05) 50%,
+      rgba(255,255,255,0.10) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  body {
+    min-height: 100%;
+    min-height: 100dvh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 2rem 1.5rem;
+    padding-top: max(2rem, env(safe-area-inset-top));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+
+  /* Custom property so conic-gradient angle can animate */
+  @property --shine-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  @keyframes shimmer-rotate {
+    to { --shine-angle: 360deg; }
+  }
+
+  @keyframes shimmer-rotate-fallback {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes glitter-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 12px rgba(255, 220, 230, 0.7),
+        0 0 24px rgba(255, 150, 180, 0.5),
+        0 4px 16px rgba(150, 30, 60, 0.25);
+    }
+    50% {
+      box-shadow:
+        0 0 18px rgba(255, 235, 245, 0.9),
+        0 0 36px rgba(255, 160, 190, 0.7),
+        0 4px 16px rgba(150, 30, 60, 0.25);
+    }
+  }
+
+  .avatar-wrap {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    isolation: isolate;
+    animation: glitter-pulse 2.8s ease-in-out infinite;
+  }
+
+  .avatar-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 3px;
+    background: conic-gradient(
+      from var(--shine-angle, 0deg),
+      #ffffff 0%,
+      #ffe0ec 8%,
+      #ff8aa8 14%,
+      #ffffff 22%,
+      #ffe8f0 30%,
+      #ffffff 40%,
+      #e63e6a 48%,
+      #ffffff 56%,
+      #ffe8f0 66%,
+      #ff8aa8 74%,
+      #ffffff 82%,
+      #ffe0ec 90%,
+      #ffffff 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 2;
+    animation: shimmer-rotate 3.5s linear infinite;
+  }
+
+  @supports not (background: conic-gradient(from var(--x, 0deg), red, blue)) {
+    .avatar-wrap::before {
+      animation: shimmer-rotate-fallback 3.5s linear infinite;
+    }
+  }
+
+  .avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
+    background: #ffd0dd;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #7a1d3a;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 0.75rem;
+    text-align: center;
+    line-height: 1.4;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .location-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #8a2547;
+    margin-top: 1rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 1rem;
+    border-radius: 50px;
+    background: rgba(255, 220, 230, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #7a1d3a;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+    overflow: hidden;
+    isolation: isolate;
+    animation: glitter-pulse 3.2s ease-in-out infinite;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  /* Glittering border ring on each button */
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    padding: 2px;
+    background: conic-gradient(
+      from var(--shine-angle, 0deg),
+      #ffffff 0%,
+      #ffe0ec 8%,
+      #ff8aa8 14%,
+      #ffffff 22%,
+      #ffe8f0 30%,
+      #ffffff 40%,
+      #e63e6a 48%,
+      #ffffff 56%,
+      #ffe8f0 66%,
+      #ff8aa8 74%,
+      #ffffff 82%,
+      #ffe0ec 90%,
+      #ffffff 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+    animation: shimmer-rotate 3.5s linear infinite;
+  }
+
+  .btn > * { position: relative; z-index: 2; }
+
+  /* "gratis" tag floating to the right of a button with an arrow pointing in */
+  .btn-tag-wrap {
+    position: relative;
+  }
+
+  .btn-tag {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%) rotate(-8deg);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #d14b6e;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+    white-space: nowrap;
+    animation: tag-bounce 1.6s ease-in-out infinite;
+  }
+
+  /* Curved arrow drawn as SVG, pointing from the tag back to the button */
+  .btn-tag svg {
+    width: 28px;
+    height: 22px;
+    /* Flip horizontally so the arrow points left toward the button */
+    transform: scaleX(-1);
+  }
+
+  @keyframes tag-bounce {
+    0%, 100% { transform: translateY(-50%) rotate(-8deg) scale(1); }
+    50%      { transform: translateY(-50%) rotate(-8deg) scale(1.08); }
+  }
+
+  .btn:active {
+    background: rgba(255, 200, 215, 0.85);
+    transform: scale(0.98);
+  }
+  @media (hover: hover) {
+    .btn:hover { background: rgba(255, 200, 215, 0.85); }
+  }
+
+  @supports not (background: conic-gradient(from var(--x, 0deg), red, blue)) {
+    .btn::before {
+      animation: shimmer-rotate-fallback 3.5s linear infinite;
+    }
+  }
+</style>
+</head>
+<body>
+
+<script>
+// === EDIT YOUR DESTINATION URLS HERE ===
+// Strip trailing slash so '/link/' and '/link' both match
+var path = window.location.pathname.replace(/\/$/, '');
+
+if (path === '/link') {
+  window.location.replace('https://onlyfans.com/dolly08a/c5'); // <-- Button 1 destination
+}
+</script>
+
+<!-- Background + shimmer + sparkles -->
+<div class="bg"></div>
+<div class="shimmer"></div>
+<div class="sparkles">
+    <span class="sparkle" style="left:25.9%;top:68.5%;width:4px;height:4px;animation-delay:2.39s;animation-duration:3.50s"></span>
+    <span class="sparkle" style="left:65.2%;top:66.6%;width:4px;height:4px;animation-delay:3.04s;animation-duration:3.08s"></span>
+    <span class="sparkle" style="left:13.0%;top:53.1%;width:6px;height:6px;animation-delay:0.75s;animation-duration:2.39s"></span>
+    <span class="sparkle" style="left:12.6%;top:68.4%;width:4px;height:4px;animation-delay:3.49s;animation-duration:3.79s"></span>
+    <span class="sparkle" style="left:8.5%;top:79.4%;width:7px;height:7px;animation-delay:3.11s;animation-duration:2.32s"></span>
+    <span class="sparkle" style="left:74.5%;top:94.9%;width:4px;height:4px;animation-delay:2.78s;animation-duration:2.31s"></span>
+    <span class="sparkle" style="left:48.7%;top:75.5%;width:5px;height:5px;animation-delay:1.97s;animation-duration:2.66s"></span>
+    <span class="sparkle" style="left:88.9%;top:63.9%;width:10px;height:10px;animation-delay:2.29s;animation-duration:2.49s"></span>
+    <span class="sparkle" style="left:79.8%;top:98.6%;width:4px;height:4px;animation-delay:2.42s;animation-duration:2.91s"></span>
+    <span class="sparkle" style="left:44.0%;top:72.9%;width:4px;height:4px;animation-delay:1.88s;animation-duration:2.39s"></span>
+    <span class="sparkle" style="left:52.3%;top:25.3%;width:6px;height:6px;animation-delay:1.61s;animation-duration:3.01s"></span>
+    <span class="sparkle" style="left:88.9%;top:57.7%;width:4px;height:4px;animation-delay:1.93s;animation-duration:2.93s"></span>
+    <span class="sparkle" style="left:70.2%;top:13.1%;width:7px;height:7px;animation-delay:1.51s;animation-duration:3.06s"></span>
+    <span class="sparkle" style="left:39.0%;top:71.9%;width:4px;height:4px;animation-delay:3.27s;animation-duration:1.89s"></span>
+    <span class="sparkle" style="left:49.8%;top:69.8%;width:6px;height:6px;animation-delay:1.56s;animation-duration:2.31s"></span>
+    <span class="sparkle" style="left:73.6%;top:25.1%;width:5px;height:5px;animation-delay:2.66s;animation-duration:2.50s"></span>
+    <span class="sparkle" style="left:52.0%;top:65.7%;width:4px;height:4px;animation-delay:3.16s;animation-duration:3.21s"></span>
+    <span class="sparkle" style="left:72.3%;top:21.2%;width:10px;height:10px;animation-delay:2.16s;animation-duration:2.96s"></span>
+    <span class="sparkle" style="left:3.9%;top:58.3%;width:4px;height:4px;animation-delay:1.99s;animation-duration:2.16s"></span>
+    <span class="sparkle" style="left:16.4%;top:68.4%;width:3px;height:3px;animation-delay:0.39s;animation-duration:2.25s"></span>
+    <span class="sparkle" style="left:42.9%;top:59.5%;width:7px;height:7px;animation-delay:2.82s;animation-duration:3.19s"></span>
+    <span class="sparkle" style="left:82.5%;top:64.5%;width:5px;height:5px;animation-delay:1.84s;animation-duration:2.05s"></span>
+    <span class="sparkle" style="left:12.2%;top:30.2%;width:3px;height:3px;animation-delay:0.94s;animation-duration:2.99s"></span>
+    <span class="sparkle" style="left:93.8%;top:52.2%;width:5px;height:5px;animation-delay:2.98s;animation-duration:1.87s"></span>
+    <span class="sparkle" style="left:33.5%;top:49.7%;width:7px;height:7px;animation-delay:3.39s;animation-duration:2.83s"></span>
+    <span class="sparkle" style="left:22.3%;top:20.7%;width:4px;height:4px;animation-delay:2.80s;animation-duration:2.55s"></span>
+    <span class="sparkle" style="left:73.8%;top:25.8%;width:5px;height:5px;animation-delay:2.39s;animation-duration:3.50s"></span>
+    <span class="sparkle" style="left:42.5%;top:23.6%;width:6px;height:6px;animation-delay:2.71s;animation-duration:2.98s"></span>
+    <span class="sparkle" style="left:20.4%;top:35.1%;width:3px;height:3px;animation-delay:0.13s;animation-duration:2.60s"></span>
+    <span class="sparkle" style="left:6.9%;top:4.6%;width:5px;height:5px;animation-delay:3.22s;animation-duration:3.11s"></span>
+    <span class="sparkle" style="left:19.0%;top:48.1%;width:5px;height:5px;animation-delay:1.94s;animation-duration:2.47s"></span>
+    <span class="sparkle" style="left:52.8%;top:95.2%;width:5px;height:5px;animation-delay:0.52s;animation-duration:1.91s"></span>
+    <span class="sparkle" style="left:82.4%;top:21.8%;width:3px;height:3px;animation-delay:1.06s;animation-duration:2.58s"></span>
+    <span class="sparkle" style="left:34.8%;top:10.0%;width:10px;height:10px;animation-delay:1.72s;animation-duration:2.97s"></span>
+    <span class="sparkle" style="left:99.0%;top:4.4%;width:3px;height:3px;animation-delay:1.87s;animation-duration:2.06s"></span>
+    <span class="sparkle" style="left:32.3%;top:89.3%;width:3px;height:3px;animation-delay:1.91s;animation-duration:2.05s"></span>
+    <span class="sparkle" style="left:89.5%;top:91.2%;width:5px;height:5px;animation-delay:2.39s;animation-duration:1.98s"></span>
+    <span class="sparkle" style="left:7.0%;top:26.4%;width:4px;height:4px;animation-delay:2.88s;animation-duration:1.89s"></span>
+    <span class="sparkle" style="left:66.7%;top:93.5%;width:7px;height:7px;animation-delay:1.82s;animation-duration:3.64s"></span>
+    <span class="sparkle" style="left:19.5%;top:39.3%;width:3px;height:3px;animation-delay:0.19s;animation-duration:2.89s"></span>
+    <span class="sparkle" style="left:11.5%;top:13.7%;width:8px;height:8px;animation-delay:1.87s;animation-duration:3.42s"></span>
+    <span class="sparkle" style="left:39.7%;top:14.9%;width:5px;height:5px;animation-delay:1.91s;animation-duration:2.32s"></span>
+    <span class="sparkle" style="left:5.2%;top:3.0%;width:5px;height:5px;animation-delay:2.54s;animation-duration:2.01s"></span>
+    <span class="sparkle" style="left:86.6%;top:100.0%;width:10px;height:10px;animation-delay:2.83s;animation-duration:2.65s"></span>
+    <span class="sparkle" style="left:97.9%;top:67.4%;width:3px;height:3px;animation-delay:2.45s;animation-duration:3.64s"></span>
+    <span class="sparkle" style="left:10.9%;top:30.8%;width:5px;height:5px;animation-delay:3.49s;animation-duration:2.74s"></span>
+    <span class="sparkle" style="left:15.1%;top:14.9%;width:8px;height:8px;animation-delay:1.05s;animation-duration:2.85s"></span>
+    <span class="sparkle" style="left:25.9%;top:33.2%;width:5px;height:5px;animation-delay:3.28s;animation-duration:2.29s"></span>
+    <span class="sparkle" style="left:41.6%;top:99.3%;width:5px;height:5px;animation-delay:2.67s;animation-duration:2.77s"></span>
+    <span class="sparkle" style="left:15.5%;top:57.8%;width:6px;height:6px;animation-delay:3.35s;animation-duration:2.73s"></span>
+</div>
+<div class="overlay"></div>
+
+<!-- Content -->
+<div class="content">
+  <div class="avatar-wrap"><img class="avatar" src=""></div>
+
+  <h1>Dolly</h1>
+  <p class="tagline"></p>
+
+  <div class="buttons">
+    <a class="btn" href="/link" target="_blank">FaceReveal?</a>
+    <a class="btn" href="https://www.instagram.com/dollylittl3">Insta</a>
+    <a class="btn" href="https://x.com/dollylittl3">Twitter</a>
+  </div>
+
+  <div class="location-text">
+    <span class="dot"></span>
+    <span id="loc-text"></span>
+  </div>
+</div>
+
+<script>
+// Geolocation fallback
+(function() {
+  var fallbacks = [
+    "Stockholm","Göteborg","Malmö","Uppsala","Linköping","Örebro","Västerås",
+    "Helsingborg","Norrköping","Jönköping","Umeå","Lund","Gävle","Borås","Sundsvall",
+    "Oslo","Bergen","Trondheim","Stavanger","Drammen","Kristiansand","Tromsø","Ålesund"
+  ];
+  function setCity(city) {
+    var c = (city && city.trim().length > 1) ? city.trim() : fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    document.getElementById('loc-text').textContent = '5 minutes ago in: ' + c;
+  }
+  function get(url, extract) {
+    return fetch(url, { cache: 'no-store' }).then(function(r) { return r.json(); }).then(function(d) {
+      var v = extract(d);
+      if (!v || v.trim().length < 2) throw new Error('no city');
+      return v;
+    });
+  }
+  get('https://ipinfo.io/json', function(d) { return d && d.city; })
+    .catch(function() { return get('https://ip-api.com/json/?fields=city,regionName', function(d) { return d && (d.city || d.regionName); }); })
+    .catch(function() { return get('https://ipapi.co/json/', function(d) { return d && (d.city || d.region); }); })
+    .then(function(city) { setCity(city); })
+    .catch(function() { setCity(null); });
+})();
+</script>
+
+</body>
+</html>
